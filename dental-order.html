@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DentaComanda</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f3;min-height:100vh;color:#1a1a18}
+.page{max-width:900px;margin:0 auto;padding:20px 16px}
+.header{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid rgba(0,0,0,0.08)}
+.card{background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);margin-bottom:14px;overflow:hidden}
+.furn-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
+.badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:500}
+.tbl-head{display:grid;grid-template-columns:32px 1fr 110px 100px;gap:10px;padding:8px 18px;background:#fafaf9;border-top:0.5px solid #f0f0ee;font-size:11px;font-weight:500;color:#888;text-transform:uppercase;letter-spacing:0.4px}
+.mat-row{display:grid;grid-template-columns:32px 1fr 110px 100px;align-items:center;gap:10px;padding:10px 18px;border-top:0.5px solid #f0f0ee;transition:background 0.1s}
+.mat-row.sel{background:#f0fdf4}
+.chk{width:20px;height:20px;border-radius:5px;border:2px solid #ccc;background:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;transition:all 0.12s}
+.chk.on{background:#16a34a;border-color:#16a34a}
+.tag{display:inline-block;background:#f0f0ee;border-radius:6px;padding:2px 8px;font-size:11px;color:#555;margin-right:4px}
+.footer-furn{padding:14px 18px;border-top:0.5px solid #f0f0ee;background:#fafaf9}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:9px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit}
+.btn-wa:hover{background:#1da855}
+.btn-add-mat{display:flex;align-items:center;gap:6px;padding:10px 18px;color:#185FA5;font-size:13px;cursor:pointer;font-weight:500;width:100%;background:transparent;border:none;border-top:0.5px solid #f0f0ee;font-family:inherit}
+.btn-add-mat:hover{background:#f5f5f3}
+.btn{display:inline-flex;align-items:center;gap:4px;padding:6px 13px;border:0.5px solid #e0e0e0;border-radius:7px;background:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:inherit}
+.btn:hover{background:#f5f5f3}
+.btn-p{background:#185FA5;color:#fff;border-color:#185FA5}
+.btn-p:hover{background:#0C447C}
+.btn-d{color:#A32D2D;border-color:#fca5a5}
+.btn-d:hover{background:#FCEBEB}
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:200;align-items:center;justify-content:center;padding:16px}
+.modal-ov.open{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:440px;max-width:100%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px}
+.fg{margin-bottom:13px}
+.fl{font-size:12px;font-weight:500;color:#666;margin-bottom:4px;display:block}
+input,select{width:100%;padding:8px 10px;border:1px solid #e0e0e0;border-radius:8px;font-size:13px;font-family:inherit;outline:none}
+input:focus,select:focus{border-color:#185FA5}
+.mf{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;padding-top:14px;border-top:0.5px solid #f0f0ee}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qty{width:80px;padding:5px 8px;border:1px solid #e0e0e0;border-radius:7px;font-size:13px;text-align:center;font-family:inherit;outline:none}
+.qty:focus{border-color:#185FA5}
+.toast{position:fixed;bottom:24px;right:24px;background:#1a1a18;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;animation:su 0.25s ease;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+@keyframes su{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <div>
+      <div style="font-size:18px;font-weight:700;color:#185FA5">🦷 DentaComanda</div>
+      <div style="font-size:12px;color:#888;margin-top:3px">Comenzi materiale stomatologice via WhatsApp</div>
+    </div>
+    <button class="btn btn-p" onclick="openF()">+ Furnizor nou</button>
+  </div>
+  <div id="list"><div style="text-align:center;padding:40px;color:#aaa">Se încarcă...</div></div>
+</div>
+
+<!-- Modal furnizor -->
+<div class="modal-ov" id="mo-f">
+  <div class="modal">
+    <div class="modal-title" id="mf-t">Furnizor nou</div>
+    <div class="fg"><label class="fl">Denumire firmă *</label><input id="f-den" placeholder="ex: Dentotal SRL"></div>
+    <div class="fg">
+      <label class="fl">Număr WhatsApp *</label>
+      <input id="f-wa" placeholder="ex: 37369123456">
+      <div style="font-size:11px;color:#aaa;margin-top:3px">Format internațional fără + (Moldova: 373xx, România: 40xx)</div>
+    </div>
+    <div class="fg"><label class="fl">Persoană contact</label><input id="f-ct" placeholder="ex: Ion Popescu"></div>
+    <div class="fg"><label class="fl">Notă</label><input id="f-nt" placeholder="optional"></div>
+    <div class="mf">
+      <button class="btn" onclick="closeM('mo-f')">Anulează</button>
+      <button class="btn btn-p" onclick="saveF()">Salvează</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal material -->
+<div class="modal-ov" id="mo-m">
+  <div class="modal">
+    <div class="modal-title" id="mm-t">Material nou</div>
+    <div class="fg"><label class="fl">Denumire material *</label><input id="m-den" placeholder="ex: Ace endodontice 25mm"></div>
+    <div class="g2">
+      <div class="fg"><label class="fl">Preț (MDL)</label><input id="m-pret" type="number" placeholder="0"></div>
+      <div class="fg"><label class="fl">Unitate</label>
+        <select id="m-um"><option>buc</option><option>cutie</option><option>flacon</option><option>ml</option><option>kg</option><option>pungă</option><option>set</option></select>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Notă / specificație</label><input id="m-nt" placeholder="ex: 21mm, A2, M..."></div>
+    <div class="mf">
+      <button class="btn" onclick="closeM('mo-m')">Anulează</button>
+      <button class="btn btn-p" onclick="saveM()">Salvează</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL='https://jqkcriqbzmzrsddzyjkj.supabase.co';
+const SUPABASE_KEY='sb_publishable_SVmu5P0d1d0xhuEDyS5tbg_t25v7Mmu';
+const{createClient}=supabase;
+const sb=createClient(SUPABASE_URL,SUPABASE_KEY);
+
+var furnizori=[],materiale=[],sel={},openSt={},editFId=null,editMId=null,curFurnId=null;
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+function toast(msg){
+  var o=document.getElementById('__t');if(o)o.remove();
+  var el=document.createElement('div');el.id='__t';el.className='toast';el.textContent=msg;
+  document.body.appendChild(el);setTimeout(function(){if(el.parentNode)el.remove();},2500);
+}
+
+async function load(){
+  var[r1,r2]=await Promise.all([
+    sb.from('furnizori_comanda').select('*').eq('activ',true).order('denumire'),
+    sb.from('materiale_comanda').select('*').eq('activ',true).order('furnizor_id').order('denumire')
+  ]);
+  furnizori=r1.data||[];materiale=r2.data||[];render();
+}
+
+function matF(fid){return materiale.filter(function(m){return m.furnizor_id===fid;});}
+function nrSel(fid){return matF(fid).filter(function(m){return sel[m.id]&&sel[m.id].c;}).length;}
+function totF(fid){return matF(fid).filter(function(m){return sel[m.id]&&sel[m.id].c;}).reduce(function(s,m){return s+(parseFloat(m.pret)||0)*(parseFloat((sel[m.id]||{}).q)||1);},0);}
+
+function render(){
+  var el=document.getElementById('list');
+  if(!furnizori.length){
+    el.innerHTML='<div style="text-align:center;padding:48px 20px;color:#aaa;background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08)"><div style="font-size:36px;margin-bottom:12px">📦</div><div style="font-size:15px;font-weight:500;margin-bottom:6px">Niciun furnizor adăugat</div><div style="font-size:13px">Apasă + Furnizor nou pentru a începe</div></div>';
+    return;
+  }
+  el.innerHTML=furnizori.map(function(f){
+    var mats=matF(f.id),isOpen=openSt[f.id],nr=nrSel(f.id),tot=totF(f.id);
+    var inner='';
+    if(isOpen){
+      inner+='<div class="tbl-head"><div></div><div>Material</div><div style="text-align:right">Preț MDL</div><div style="text-align:center">Cantitate</div></div>';
+      if(!mats.length) inner+='<div style="padding:14px 18px;color:#bbb;font-size:13px;font-style:italic">Niciun material. Apasă butonul de mai jos.</div>';
+      mats.forEach(function(mat){
+        var s=sel[mat.id]&&sel[mat.id].c,q=(sel[mat.id]&&sel[mat.id].q)||1;
+        inner+='<div class="mat-row'+(s?' sel':'')+'">'
+          +'<div class="chk'+(s?' on':'')+'" onclick="toggleC(\''+mat.id+'\')">'
+          +(s?'<svg width="12" height="12" viewBox="0 0 12 12" fill="none"><polyline points="2,6 5,9 10,3" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>':'')
+          +'</div>'
+          +'<div>'
+          +'<div style="font-size:13px;font-weight:500;color:'+(s?'#1a1a18':'#555')+'">'+esc(mat.denumire)+'</div>'
+          +(mat.nota?'<div style="font-size:11px;color:#aaa;margin-top:2px">'+esc(mat.nota)+'</div>':'')
+          +'<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'
+          +'<span class="tag">'+esc(mat.unitate||'buc')+'</span>'
+          +'<button class="btn" style="font-size:10px;padding:2px 7px" onclick="openMEdit(\''+mat.id+'\')">edit</button>'
+          +'<button class="btn btn-d" style="font-size:10px;padding:2px 7px" onclick="delMat(\''+mat.id+'\')">✕</button>'
+          +'</div></div>'
+          +'<div style="font-size:13px;font-weight:600;color:#185FA5;text-align:right">'+parseFloat(mat.pret||0).toFixed(0)+' MDL</div>'
+          +'<div style="text-align:center">'
+          +(s?'<input class="qty" type="number" min="1" step="1" value="'+q+'" oninput="setQ(\''+mat.id+'\',this.value)" onclick="event.stopPropagation()">':'<span style="font-size:12px;color:#ccc">—</span>')
+          +'</div>'
+          +'</div>';
+      });
+      inner+='<button class="btn-add-mat" onclick="openMNou(\''+f.id+'\')">'
+        +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'
+        +' Adaugă material</button>';
+      if(nr>0){
+        inner+='<div class="footer-furn">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+          +'<span style="font-size:13px;color:#888">'+nr+' material(e) selectate</span>'
+          +'<span style="font-size:16px;font-weight:700;color:#185FA5">Total: '+tot.toFixed(0)+' MDL</span>'
+          +'</div>'
+          +'<div style="display:flex;gap:8px">'
+          +'<button class="btn" style="flex:1" onclick="golSel(\''+f.id+'\')">Golește selecția</button>'
+          +'<button class="btn-wa" style="flex:2" onclick="trimitWA(\''+f.id+'\')">'
+          +'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
+          +' Trimite comandă pe WhatsApp'
+          +'</button></div></div>';
+      }
+    }
+    return '<div class="card">'
+      +'<div class="furn-header" onclick="toggleOpen(\''+f.id+'\')">'
+      +'<div style="flex:1">'
+      +'<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<span style="font-weight:600;font-size:15px">'+esc(f.denumire)+'</span>'
+      +(nr>0?'<span class="badge" style="background:#EAF3DE;color:#27500A">'+nr+' sel. · '+tot.toFixed(0)+' MDL</span>':'')
+      +'<span class="badge" style="background:#f0f0ee;color:#555">'+mats.length+' materiale</span>'
+      +'</div>'
+      +'<div style="font-size:12px;color:#888;margin-top:3px">📱 '+esc(f.whatsapp)+(f.contact?' · 👤 '+esc(f.contact):'')+'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:8px;margin-left:10px">'
+      +'<button class="btn" onclick="event.stopPropagation();openFEdit(\''+f.id+'\')">Editează</button>'
+      +'<button class="btn btn-d" onclick="event.stopPropagation();delF(\''+f.id+'\')">✕</button>'
+      +'<span style="font-size:14px;color:#aaa;margin-left:4px">'+(isOpen?'▲':'▼')+'</span>'
+      +'</div></div>'
+      +inner
+      +'</div>';
+  }).join('');
+}
+
+function toggleOpen(fid){openSt[fid]=!openSt[fid];render();}
+function toggleC(mid){sel[mid]={c:!(sel[mid]&&sel[mid].c),q:(sel[mid]&&sel[mid].q)||1};render();}
+function setQ(mid,val){if(sel[mid])sel[mid].q=val;}
+function golSel(fid){matF(fid).forEach(function(m){delete sel[m.id];});render();}
+
+function trimitWA(fid){
+  var f=furnizori.find(function(x){return x.id===fid;});
+  var items=matF(fid).filter(function(m){return sel[m.id]&&sel[m.id].c;});
+  if(!items.length)return;
+  var linii=items.map(function(m){
+    var q=parseFloat((sel[m.id]||{}).q)||1;
+    var tot=(parseFloat(m.pret)||0)*q;
+    return '• '+m.denumire+' — '+q+' '+(m.unitate||'buc')+' × '+parseFloat(m.pret||0).toFixed(0)+' MDL = '+tot.toFixed(0)+' MDL';
+  }).join('\n');
+  var total=items.reduce(function(s,m){return s+(parseFloat(m.pret)||0)*(parseFloat((sel[m.id]||{}).q)||1);},0);
+  var msg='Bună ziua! Vă transmitem comanda de materiale stomatologice:\n\n'+linii+'\n\nTOTAL: '+total.toFixed(0)+' MDL\n\nVă mulțumim!';
+  var nr=f.whatsapp.replace(/[^0-9]/g,'');
+  window.open('https://wa.me/'+nr+'?text='+encodeURIComponent(msg),'_blank');
+}
+
+// ── Modal furnizor ───────────────────────────────────────────
+function openF(){
+  editFId=null;
+  document.getElementById('mf-t').textContent='Furnizor nou';
+  ['f-den','f-wa','f-ct','f-nt'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('mo-f').classList.add('open');
+}
+function openFEdit(fid){
+  var f=furnizori.find(function(x){return x.id===fid;});
+  editFId=fid;
+  document.getElementById('mf-t').textContent='Editează: '+f.denumire;
+  document.getElementById('f-den').value=f.denumire||'';
+  document.getElementById('f-wa').value=f.whatsapp||'';
+  document.getElementById('f-ct').value=f.contact||'';
+  document.getElementById('f-nt').value=f.nota||'';
+  document.getElementById('mo-f').classList.add('open');
+}
+async function saveF(){
+  var den=document.getElementById('f-den').value.trim();
+  var wa=document.getElementById('f-wa').value.trim();
+  if(!den){toast('Introduceți denumirea!');return;}
+  if(!wa){toast('Introduceți numărul WhatsApp!');return;}
+  var data={denumire:den,whatsapp:wa,contact:document.getElementById('f-ct').value,nota:document.getElementById('f-nt').value};
+  if(editFId) await sb.from('furnizori_comanda').update(data).eq('id',editFId);
+  else await sb.from('furnizori_comanda').insert([data]);
+  closeM('mo-f');load();toast('✓ Furnizor salvat!');
+}
+async function delF(fid){
+  if(!confirm('Ștergi furnizorul și toate materialele lui?'))return;
+  await sb.from('materiale_comanda').update({activ:false}).eq('furnizor_id',fid);
+  await sb.from('furnizori_comanda').update({activ:false}).eq('id',fid);
+  load();toast('Furnizor șters.');
+}
+
+// ── Modal material ───────────────────────────────────────────
+function openMNou(fid){
+  editMId=null;curFurnId=fid;
+  document.getElementById('mm-t').textContent='Material nou';
+  ['m-den','m-pret','m-nt'].forEach(function(id){document.getElementById(id).value='';});
+  document.getElementById('m-um').value='buc';
+  document.getElementById('mo-m').classList.add('open');
+}
+function openMEdit(mid){
+  var m=materiale.find(function(x){return x.id===mid;});
+  editMId=mid;curFurnId=m.furnizor_id;
+  document.getElementById('mm-t').textContent='Editează: '+m.denumire;
+  document.getElementById('m-den').value=m.denumire||'';
+  document.getElementById('m-pret').value=m.pret||'';
+  document.getElementById('m-um').value=m.unitate||'buc';
+  document.getElementById('m-nt').value=m.nota||'';
+  document.getElementById('mo-m').classList.add('open');
+}
+async function saveM(){
+  var den=document.getElementById('m-den').value.trim();
+  if(!den){toast('Introduceți denumirea materialului!');return;}
+  var data={furnizor_id:curFurnId,denumire:den,pret:parseFloat(document.getElementById('m-pret').value)||0,unitate:document.getElementById('m-um').value,nota:document.getElementById('m-nt').value};
+  if(editMId) await sb.from('materiale_comanda').update(data).eq('id',editMId);
+  else await sb.from('materiale_comanda').insert([data]);
+  closeM('mo-m');load();toast('✓ Material salvat!');
+}
+async function delMat(mid){
+  if(!confirm('Ștergi acest material?'))return;
+  await sb.from('materiale_comanda').update({activ:false}).eq('id',mid);
+  load();toast('Material șters.');
+}
+
+function closeM(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-ov').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+
+load();
+</script>
+</body>
+</html>
