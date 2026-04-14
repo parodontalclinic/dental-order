@@ -8,8 +8,13 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:14px;background:#f5f5f3;min-height:100vh;color:#1a1a18}
-.page{max-width:900px;margin:0 auto;padding:20px 16px}
+.page{max-width:960px;margin:0 auto;padding:20px 16px}
 .header{background:#fff;border-radius:12px;padding:16px 20px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;border:0.5px solid rgba(0,0,0,0.08)}
+.tabs{display:flex;gap:0;background:#fff;border-radius:12px;padding:4px;margin-bottom:20px;border:0.5px solid rgba(0,0,0,0.08)}
+.tab{flex:1;padding:8px;border:none;border-radius:8px;background:transparent;cursor:pointer;font-size:13px;color:#888;font-family:inherit;font-weight:500;transition:all 0.15s}
+.tab.active{background:#185FA5;color:#fff}
+.tab-content{display:none}
+.tab-content.active{display:block}
 .card{background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);margin-bottom:14px;overflow:hidden}
 .furn-header{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}
 .badge{display:inline-block;padding:2px 10px;border-radius:999px;font-size:12px;font-weight:500}
@@ -20,7 +25,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-siz
 .chk.on{background:#16a34a;border-color:#16a34a}
 .tag{display:inline-block;background:#f0f0ee;border-radius:6px;padding:2px 8px;font-size:11px;color:#555;margin-right:4px}
 .footer-furn{padding:14px 18px;border-top:0.5px solid #f0f0ee;background:#fafaf9}
-.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:9px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit}
+.btn-wa{display:flex;align-items:center;justify-content:center;gap:8px;background:#25D366;color:#fff;border:none;border-radius:9px;padding:12px 20px;font-size:14px;font-weight:600;cursor:pointer;width:100%;font-family:inherit;transition:background 0.15s}
 .btn-wa:hover{background:#1da855}
 .btn-add-mat{display:flex;align-items:center;gap:6px;padding:10px 18px;color:#185FA5;font-size:13px;cursor:pointer;font-weight:500;width:100%;background:transparent;border:none;border-top:0.5px solid #f0f0ee;font-family:inherit}
 .btn-add-mat:hover{background:#f5f5f3}
@@ -44,6 +49,20 @@ input:focus,select:focus{border-color:#185FA5}
 .qty:focus{border-color:#185FA5}
 .toast{position:fixed;bottom:24px;right:24px;background:#1a1a18;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:500;z-index:999;animation:su 0.25s ease;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
 @keyframes su{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+.stat-card{background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08);padding:16px 20px;margin-bottom:14px}
+.stat-title{font-size:14px;font-weight:600;color:#185FA5;margin-bottom:12px}
+.stat-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid #f0f0ee}
+.stat-row:last-child{border-bottom:none}
+.bar-wrap{flex:1;background:#f0f0ee;border-radius:4px;height:8px;overflow:hidden}
+.bar-fill{height:8px;border-radius:4px;background:#185FA5}
+.period-btn{padding:5px 14px;border:0.5px solid #e0e0e0;border-radius:7px;background:#fff;cursor:pointer;font-size:12px;font-weight:500;font-family:inherit;transition:all 0.12s}
+.period-btn.active{background:#185FA5;color:#fff;border-color:#185FA5}
+.cmd-row{padding:12px 0;border-bottom:0.5px solid #f0f0ee}
+.cmd-row:last-child{border-bottom:none}
+.metric{background:#f5f5f3;border-radius:10px;padding:14px 16px;text-align:center}
+.metric-val{font-size:22px;font-weight:700;color:#185FA5}
+.metric-lbl{font-size:11px;color:#888;margin-top:3px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
 </style>
 </head>
 <body>
@@ -51,11 +70,36 @@ input:focus,select:focus{border-color:#185FA5}
   <div class="header">
     <div>
       <div style="font-size:18px;font-weight:700;color:#185FA5">🦷 DentaComanda</div>
-      <div style="font-size:12px;color:#888;margin-top:3px">Comenzi materiale stomatologice via WhatsApp</div>
+      <div style="font-size:12px;color:#888;margin-top:3px">Parodontal Clinic · comenzi materiale stomatologice</div>
     </div>
     <button class="btn btn-p" onclick="openF()">+ Furnizor nou</button>
   </div>
-  <div id="list"><div style="text-align:center;padding:40px;color:#aaa">Se încarcă...</div></div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('comenzi',this)">📦 Comenzi</button>
+    <button class="tab" onclick="switchTab('statistici',this)">📊 Statistici</button>
+  </div>
+
+  <div id="tab-comenzi" class="tab-content active">
+    <div id="list"><div style="text-align:center;padding:40px;color:#aaa">Se încarcă...</div></div>
+  </div>
+
+  <div id="tab-statistici" class="tab-content">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center">
+      <span style="font-size:13px;font-weight:500;color:#555">Perioadă:</span>
+      <button class="period-btn active" onclick="setPeriod('zi',this)">Zi</button>
+      <button class="period-btn" onclick="setPeriod('saptamana',this)">Săptămână</button>
+      <button class="period-btn" onclick="setPeriod('luna',this)">Lună</button>
+      <button class="period-btn" onclick="setPeriod('an',this)">An</button>
+      <button class="period-btn" onclick="setPeriod('total',this)">Total</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <input type="date" id="date-from" style="width:140px;font-size:12px;padding:5px 8px" onchange="loadStat()">
+        <span style="font-size:12px;color:#888">—</span>
+        <input type="date" id="date-to" style="width:140px;font-size:12px;padding:5px 8px" onchange="loadStat()">
+      </div>
+    </div>
+    <div id="stat-content"><div style="text-align:center;padding:40px;color:#aaa">Selectează o perioadă</div></div>
+  </div>
 </div>
 
 <!-- Modal furnizor -->
@@ -106,10 +150,20 @@ var furnizori=[],materiale=[],sel={},openSt={},editFId=null,editMId=null,curFurn
 
 function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 
-function toast(msg){
+function toast(msg,ok){
   var o=document.getElementById('__t');if(o)o.remove();
-  var el=document.createElement('div');el.id='__t';el.className='toast';el.textContent=msg;
-  document.body.appendChild(el);setTimeout(function(){if(el.parentNode)el.remove();},2500);
+  var el=document.createElement('div');el.id='__t';el.className='toast';
+  el.style.background=ok===false?'#A32D2D':'#1a1a18';
+  el.textContent=msg;document.body.appendChild(el);
+  setTimeout(function(){if(el.parentNode)el.remove();},2800);
+}
+
+function switchTab(id,btn){
+  document.querySelectorAll('.tab-content').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.getElementById('tab-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='statistici')loadStat();
 }
 
 async function load(){
@@ -135,7 +189,7 @@ function render(){
     var inner='';
     if(isOpen){
       inner+='<div class="tbl-head"><div></div><div>Material</div><div style="text-align:right">Preț MDL</div><div style="text-align:center">Cantitate</div></div>';
-      if(!mats.length) inner+='<div style="padding:14px 18px;color:#bbb;font-size:13px;font-style:italic">Niciun material. Apasă butonul de mai jos.</div>';
+      if(!mats.length)inner+='<div style="padding:14px 18px;color:#bbb;font-size:13px;font-style:italic">Niciun material. Apasă butonul de mai jos.</div>';
       mats.forEach(function(mat){
         var s=sel[mat.id]&&sel[mat.id].c,q=(sel[mat.id]&&sel[mat.id].q)||1;
         inner+='<div class="mat-row'+(s?' sel':'')+'">'
@@ -153,24 +207,23 @@ function render(){
           +'<div style="font-size:13px;font-weight:600;color:#185FA5;text-align:right">'+parseFloat(mat.pret||0).toFixed(0)+' MDL</div>'
           +'<div style="text-align:center">'
           +(s?'<input class="qty" type="number" min="1" step="1" value="'+q+'" oninput="setQ(\''+mat.id+'\',this.value)" onclick="event.stopPropagation()">':'<span style="font-size:12px;color:#ccc">—</span>')
-          +'</div>'
-          +'</div>';
+          +'</div></div>';
       });
       inner+='<button class="btn-add-mat" onclick="openMNou(\''+f.id+'\')">'
         +'<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>'
         +' Adaugă material</button>';
       if(nr>0){
         inner+='<div class="footer-furn">'
-          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+          +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
           +'<span style="font-size:13px;color:#888">'+nr+' material(e) selectate</span>'
           +'<span style="font-size:16px;font-weight:700;color:#185FA5">Total: '+tot.toFixed(0)+' MDL</span>'
           +'</div>'
+          +'<div style="font-size:11px;color:#aaa;margin-bottom:10px">💡 Prețurile sunt vizibile doar aici — nu se trimit pe WhatsApp</div>'
           +'<div style="display:flex;gap:8px">'
           +'<button class="btn" style="flex:1" onclick="golSel(\''+f.id+'\')">Golește selecția</button>'
           +'<button class="btn-wa" style="flex:2" onclick="trimitWA(\''+f.id+'\')">'
           +'<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>'
-          +' Trimite comandă pe WhatsApp'
-          +'</button></div></div>';
+          +' Trimite comandă pe WhatsApp</button></div></div>';
       }
     }
     return '<div class="card">'
@@ -187,9 +240,7 @@ function render(){
       +'<button class="btn" onclick="event.stopPropagation();openFEdit(\''+f.id+'\')">Editează</button>'
       +'<button class="btn btn-d" onclick="event.stopPropagation();delF(\''+f.id+'\')">✕</button>'
       +'<span style="font-size:14px;color:#aaa;margin-left:4px">'+(isOpen?'▲':'▼')+'</span>'
-      +'</div></div>'
-      +inner
-      +'</div>';
+      +'</div></div>'+inner+'</div>';
   }).join('');
 }
 
@@ -198,89 +249,126 @@ function toggleC(mid){sel[mid]={c:!(sel[mid]&&sel[mid].c),q:(sel[mid]&&sel[mid].
 function setQ(mid,val){if(sel[mid])sel[mid].q=val;}
 function golSel(fid){matF(fid).forEach(function(m){delete sel[m.id];});render();}
 
-function trimitWA(fid){
+async function trimitWA(fid){
   var f=furnizori.find(function(x){return x.id===fid;});
   var items=matF(fid).filter(function(m){return sel[m.id]&&sel[m.id].c;});
   if(!items.length)return;
+
+  // Mesaj WA — doar denumire x cantitate, FARA preturi
   var linii=items.map(function(m){
     var q=parseFloat((sel[m.id]||{}).q)||1;
-    var tot=(parseFloat(m.pret)||0)*q;
-    return '• '+m.denumire+' — '+q+' '+(m.unitate||'buc')+' × '+parseFloat(m.pret||0).toFixed(0)+' MDL = '+tot.toFixed(0)+' MDL';
+    return '• '+m.denumire+' x '+q+' '+(m.unitate||'buc');
   }).join('\n');
+  var msg='Buna, va trimitem lista de materiale pentru Parodontal Clinic, strada Nicolai Zelinski 15/3, va rugam sa ne comunicati in cat timp poate fi efectuata livrarea.\n\n'+linii;
+
+  // Salvam comanda cu preturi in BD pentru statistici
   var total=items.reduce(function(s,m){return s+(parseFloat(m.pret)||0)*(parseFloat((sel[m.id]||{}).q)||1);},0);
-  var msg='Bună ziua! Vă transmitem comanda de materiale stomatologice:\n\n'+linii+'\n\nTOTAL: '+total.toFixed(0)+' MDL\n\nVă mulțumim!';
+  var itemsData=items.map(function(m){
+    var q=parseFloat((sel[m.id]||{}).q)||1;
+    return{id:m.id,denumire:m.denumire,pret:parseFloat(m.pret)||0,cantitate:q,unitate:m.unitate||'buc',subtotal:(parseFloat(m.pret)||0)*q};
+  });
+  await sb.from('comenzi_comanda').insert([{furnizor_id:fid,furnizor_nume:f.denumire,items:itemsData,total:total}]);
+
   var nr=f.whatsapp.replace(/[^0-9]/g,'');
   window.open('https://wa.me/'+nr+'?text='+encodeURIComponent(msg),'_blank');
+  toast('✓ Comandă trimisă și salvată în statistici!');
 }
 
-// ── Modal furnizor ───────────────────────────────────────────
-function openF(){
-  editFId=null;
-  document.getElementById('mf-t').textContent='Furnizor nou';
-  ['f-den','f-wa','f-ct','f-nt'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('mo-f').classList.add('open');
-}
-function openFEdit(fid){
-  var f=furnizori.find(function(x){return x.id===fid;});
-  editFId=fid;
-  document.getElementById('mf-t').textContent='Editează: '+f.denumire;
-  document.getElementById('f-den').value=f.denumire||'';
-  document.getElementById('f-wa').value=f.whatsapp||'';
-  document.getElementById('f-ct').value=f.contact||'';
-  document.getElementById('f-nt').value=f.nota||'';
-  document.getElementById('mo-f').classList.add('open');
-}
-async function saveF(){
-  var den=document.getElementById('f-den').value.trim();
-  var wa=document.getElementById('f-wa').value.trim();
-  if(!den){toast('Introduceți denumirea!');return;}
-  if(!wa){toast('Introduceți numărul WhatsApp!');return;}
-  var data={denumire:den,whatsapp:wa,contact:document.getElementById('f-ct').value,nota:document.getElementById('f-nt').value};
-  if(editFId) await sb.from('furnizori_comanda').update(data).eq('id',editFId);
-  else await sb.from('furnizori_comanda').insert([data]);
-  closeM('mo-f');load();toast('✓ Furnizor salvat!');
-}
-async function delF(fid){
-  if(!confirm('Ștergi furnizorul și toate materialele lui?'))return;
-  await sb.from('materiale_comanda').update({activ:false}).eq('furnizor_id',fid);
-  await sb.from('furnizori_comanda').update({activ:false}).eq('id',fid);
-  load();toast('Furnizor șters.');
+// ── STATISTICI ───────────────────────────────────────────────
+function setPeriod(p,btn){
+  document.querySelectorAll('.period-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  var now=new Date(),from=new Date(now),to=new Date(now);
+  if(p==='zi'){/* azi */}
+  else if(p==='saptamana'){from.setDate(now.getDate()-6);}
+  else if(p==='luna'){from=new Date(now.getFullYear(),now.getMonth(),1);}
+  else if(p==='an'){from=new Date(now.getFullYear(),0,1);}
+  else if(p==='total'){from=new Date('2020-01-01');}
+  document.getElementById('date-from').value=from.toISOString().slice(0,10);
+  document.getElementById('date-to').value=to.toISOString().slice(0,10);
+  loadStat();
 }
 
-// ── Modal material ───────────────────────────────────────────
-function openMNou(fid){
-  editMId=null;curFurnId=fid;
-  document.getElementById('mm-t').textContent='Material nou';
-  ['m-den','m-pret','m-nt'].forEach(function(id){document.getElementById(id).value='';});
-  document.getElementById('m-um').value='buc';
-  document.getElementById('mo-m').classList.add('open');
+async function loadStat(){
+  var from=document.getElementById('date-from').value;
+  var to=document.getElementById('date-to').value;
+  if(!from||!to){return;}
+  var{data:comenzi}=await sb.from('comenzi_comanda').select('*').gte('creat_la',from+'T00:00:00').lte('creat_la',to+'T23:59:59').order('creat_la',{ascending:false});
+  comenzi=comenzi||[];
+  if(!comenzi.length){
+    document.getElementById('stat-content').innerHTML='<div style="text-align:center;padding:40px;color:#aaa;background:#fff;border-radius:12px;border:0.5px solid rgba(0,0,0,0.08)"><div style="font-size:28px;margin-bottom:10px">📊</div><div>Nicio comandă în această perioadă.</div></div>';
+    return;
+  }
+  var totalGen=comenzi.reduce(function(s,c){return s+(parseFloat(c.total)||0);},0);
+  var furnUnici=[...new Set(comenzi.map(function(c){return c.furnizor_nume;}))].length;
+
+  // Grupare furnizori
+  var grupF={};
+  comenzi.forEach(function(c){
+    if(!grupF[c.furnizor_nume])grupF[c.furnizor_nume]={total:0,comenzi:0,items:[]};
+    grupF[c.furnizor_nume].total+=parseFloat(c.total)||0;
+    grupF[c.furnizor_nume].comenzi++;
+    if(Array.isArray(c.items))c.items.forEach(function(it){grupF[c.furnizor_nume].items.push(it);});
+  });
+  var maxT=Math.max.apply(null,Object.values(grupF).map(function(g){return g.total;}));
+
+  var html='<div class="grid3">'
+    +'<div class="metric"><div class="metric-val">'+comenzi.length+'</div><div class="metric-lbl">Comenzi trimise</div></div>'
+    +'<div class="metric"><div class="metric-val">'+totalGen.toFixed(0)+' MDL</div><div class="metric-lbl">Valoare totală</div></div>'
+    +'<div class="metric"><div class="metric-val">'+furnUnici+'</div><div class="metric-lbl">Furnizori activi</div></div>'
+    +'</div>';
+
+  html+='<div class="stat-card"><div class="stat-title">Cheltuieli per furnizor</div>';
+  Object.entries(grupF).sort(function(a,b){return b[1].total-a[1].total;}).forEach(function(e){
+    var name=e[0],g=e[1],pct=maxT>0?Math.round(g.total/maxT*100):0;
+    html+='<div class="stat-row">'
+      +'<div style="min-width:150px;font-size:13px;font-weight:500">'+esc(name)+'</div>'
+      +'<div class="bar-wrap"><div class="bar-fill" style="width:'+pct+'%"></div></div>'
+      +'<div style="text-align:right;min-width:110px">'
+      +'<div style="font-size:13px;font-weight:700;color:#185FA5">'+g.total.toFixed(0)+' MDL</div>'
+      +'<div style="font-size:11px;color:#aaa">'+g.comenzi+' comenzi</div>'
+      +'</div></div>';
+  });
+  html+='</div>';
+
+  html+='<div class="stat-card"><div class="stat-title">Istoricul comenzilor</div>';
+  comenzi.forEach(function(c){
+    var data=new Date(c.creat_la).toLocaleString('ro-RO',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+    var items=Array.isArray(c.items)?c.items:[];
+    html+='<div class="cmd-row">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px">'
+      +'<div><div style="font-size:13px;font-weight:600">'+esc(c.furnizor_nume)+'</div>'
+      +'<div style="font-size:11px;color:#aaa;margin-top:2px">📅 '+data+'</div></div>'
+      +'<div style="font-size:15px;font-weight:700;color:#185FA5">'+parseFloat(c.total||0).toFixed(0)+' MDL</div>'
+      +'</div>'
+      +'<div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:5px">'
+      +items.map(function(it){
+        return '<span style="background:#f0f0ee;border-radius:6px;padding:3px 8px;font-size:11px;color:#444">'
+          +esc(it.denumire)+' × '+it.cantitate+' '+esc(it.unitate||'buc')
+          +' <span style="color:#185FA5;font-weight:600">'+parseFloat(it.subtotal||0).toFixed(0)+' MDL</span></span>';
+      }).join('')+'</div></div>';
+  });
+  html+='</div>';
+  document.getElementById('stat-content').innerHTML=html;
 }
-function openMEdit(mid){
-  var m=materiale.find(function(x){return x.id===mid;});
-  editMId=mid;curFurnId=m.furnizor_id;
-  document.getElementById('mm-t').textContent='Editează: '+m.denumire;
-  document.getElementById('m-den').value=m.denumire||'';
-  document.getElementById('m-pret').value=m.pret||'';
-  document.getElementById('m-um').value=m.unitate||'buc';
-  document.getElementById('m-nt').value=m.nota||'';
-  document.getElementById('mo-m').classList.add('open');
-}
-async function saveM(){
-  var den=document.getElementById('m-den').value.trim();
-  if(!den){toast('Introduceți denumirea materialului!');return;}
-  var data={furnizor_id:curFurnId,denumire:den,pret:parseFloat(document.getElementById('m-pret').value)||0,unitate:document.getElementById('m-um').value,nota:document.getElementById('m-nt').value};
-  if(editMId) await sb.from('materiale_comanda').update(data).eq('id',editMId);
-  else await sb.from('materiale_comanda').insert([data]);
-  closeM('mo-m');load();toast('✓ Material salvat!');
-}
-async function delMat(mid){
-  if(!confirm('Ștergi acest material?'))return;
-  await sb.from('materiale_comanda').update({activ:false}).eq('id',mid);
-  load();toast('Material șters.');
-}
+
+// ── Furnizori ────────────────────────────────────────────────
+function openF(){editFId=null;document.getElementById('mf-t').textContent='Furnizor nou';['f-den','f-wa','f-ct','f-nt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('mo-f').classList.add('open');}
+function openFEdit(fid){var f=furnizori.find(function(x){return x.id===fid;});editFId=fid;document.getElementById('mf-t').textContent='Editează: '+f.denumire;document.getElementById('f-den').value=f.denumire||'';document.getElementById('f-wa').value=f.whatsapp||'';document.getElementById('f-ct').value=f.contact||'';document.getElementById('f-nt').value=f.nota||'';document.getElementById('mo-f').classList.add('open');}
+async function saveF(){var den=document.getElementById('f-den').value.trim(),wa=document.getElementById('f-wa').value.trim();if(!den){toast('Introduceți denumirea!',false);return;}if(!wa){toast('Introduceți numărul WhatsApp!',false);return;}var data={denumire:den,whatsapp:wa,contact:document.getElementById('f-ct').value,nota:document.getElementById('f-nt').value};if(editFId)await sb.from('furnizori_comanda').update(data).eq('id',editFId);else await sb.from('furnizori_comanda').insert([data]);closeM('mo-f');load();toast('✓ Furnizor salvat!');}
+async function delF(fid){if(!confirm('Ștergi furnizorul și toate materialele lui?'))return;await sb.from('materiale_comanda').update({activ:false}).eq('furnizor_id',fid);await sb.from('furnizori_comanda').update({activ:false}).eq('id',fid);load();toast('Furnizor șters.');}
+
+// ── Materiale ────────────────────────────────────────────────
+function openMNou(fid){editMId=null;curFurnId=fid;document.getElementById('mm-t').textContent='Material nou';['m-den','m-pret','m-nt'].forEach(function(id){document.getElementById(id).value='';});document.getElementById('m-um').value='buc';document.getElementById('mo-m').classList.add('open');}
+function openMEdit(mid){var m=materiale.find(function(x){return x.id===mid;});editMId=mid;curFurnId=m.furnizor_id;document.getElementById('mm-t').textContent='Editează: '+m.denumire;document.getElementById('m-den').value=m.denumire||'';document.getElementById('m-pret').value=m.pret||'';document.getElementById('m-um').value=m.unitate||'buc';document.getElementById('m-nt').value=m.nota||'';document.getElementById('mo-m').classList.add('open');}
+async function saveM(){var den=document.getElementById('m-den').value.trim();if(!den){toast('Introduceți denumirea!',false);return;}var data={furnizor_id:curFurnId,denumire:den,pret:parseFloat(document.getElementById('m-pret').value)||0,unitate:document.getElementById('m-um').value,nota:document.getElementById('m-nt').value};if(editMId)await sb.from('materiale_comanda').update(data).eq('id',editMId);else await sb.from('materiale_comanda').insert([data]);closeM('mo-m');load();toast('✓ Material salvat!');}
+async function delMat(mid){if(!confirm('Ștergi acest material?'))return;await sb.from('materiale_comanda').update({activ:false}).eq('id',mid);load();toast('Material șters.');}
 
 function closeM(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-ov').forEach(function(m){m.addEventListener('click',function(e){if(e.target===m)m.classList.remove('open');});});
+
+// Init date
+(function(){var now=new Date().toISOString().slice(0,10);document.getElementById('date-from').value=now;document.getElementById('date-to').value=now;})();
 
 load();
 </script>
